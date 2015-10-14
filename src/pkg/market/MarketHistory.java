@@ -1,12 +1,11 @@
 package pkg.market;
 
-import pkg.exception.StockMarketExpection;
-
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
+import pkg.exception.StockMarketExpection;
 import pkg.market.api.IObserver;
 import pkg.market.api.ISubject;
 import pkg.stock.Stock;
@@ -44,14 +43,17 @@ public class MarketHistory implements IObserver {
 		}
 		if (history.containsKey(updatedStock.getSymbol())) {
 			List<Double> priceList = history.get(updatedStock.getSymbol());
-			priceList.add(updatedStock.getPrice());
-			history.put(updatedStock.getSymbol(), priceList);
+			addIntoHistory(updatedStock, priceList);
 		} else {
 			// New entry to history
 			List<Double> priceList = new ArrayList<Double>();
-			priceList.add(updatedStock.getPrice());
-			history.put(updatedStock.getSymbol(), priceList);
+			addIntoHistory(updatedStock, priceList);
 		}
+	}
+
+	private void addIntoHistory(Stock updatedStock, List<Double> priceList) {
+		priceList.add(updatedStock.getPrice());
+		history.put(updatedStock.getSymbol(), priceList);
 	}
 
 	public ArrayList<Double> getPriceFor(String symbol) {

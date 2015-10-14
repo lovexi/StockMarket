@@ -7,6 +7,7 @@ public interface ISubject {
 	
 	public Object getUpdate();
 
+	// Abstract method
 	public void unRegisterObserver(IObserver observer);
 
 }

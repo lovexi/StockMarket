@@ -21,6 +21,7 @@ public class PriceSetter implements ISubject {
 	@Override
 	public void notifyObserver() {
 		for (IObserver observer : observersList) {
+			// Call the update method of observer class
 			observer.update();
 		}
 	}

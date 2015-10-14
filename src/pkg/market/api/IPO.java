@@ -5,8 +5,8 @@ import pkg.stock.Stock;
 
 public class IPO {
 	public static void enterNewStock(Market m, String symbol, String name,
-			double ipoPrice) {
-		Stock stock = new Stock(symbol, name, ipoPrice);
+			double price) {
+		Stock stock = new Stock(symbol, name, price);
 		try {
 			m.addStock(stock);
 		} catch (StockMarketExpection e) {

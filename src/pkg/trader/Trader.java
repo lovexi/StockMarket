@@ -4,17 +4,17 @@ import java.util.ArrayList;
 
 import pkg.exception.StockMarketExpection;
 import pkg.market.Market;
+import pkg.order.BuyOrder;
 import pkg.order.Order;
 import pkg.order.OrderType;
+import pkg.order.SellOrder;
+import pkg.util.OrderUtility;
 
 public class Trader {
-	// Name of the trader
 	String name;
-	// Cash left in the trader's hand
 	double cashInHand;
 	// Stocks owned by the trader
 	ArrayList<Order> position;
-	// Orders placed by the trader
 	ArrayList<Order> ordersPlaced;
 
 	public Trader(String name, double cashInHand) {
@@ -27,47 +27,144 @@ public class Trader {
 
 	public void buyFromBank(Market m, String symbol, int volume)
 			throws StockMarketExpection {
-		// Buy stock straight from the bank
-		// Need not place the stock in the order list
-		// Add it straight to the user's position
-		// If the stock's price is larger than the cash possessed, then an
-		// exception is thrown
-		// Adjust cash possessed since the trader spent money to purchase a
-		// stock.
+		Order order = null;
+		double price = m.getStockForSymbol(symbol).getPrice();
+		order = createBuyOrder(symbol, volume, price);
+		position.add(order);
+		cashInHand -= volume * price;
+
 	}
 
 	public void placeNewOrder(Market m, String symbol, int volume,
 			double price, OrderType orderType) throws StockMarketExpection {
-		// Place a new order and add to the orderlist
-		// Also enter the order into the orderbook of the market.
-		// Note that no trade has been made yet. The order is in suspension
-		// until a trade is triggered.
-		//
-		// If the stock's price is larger than the cash possessed, then an
-		// exception is thrown
-		// A trader cannot place two orders for the same stock, throw an
-		// exception if there are multiple orders for the same stock.
-		// Also a person cannot place a sell order for a stock that he does not
-		// own. Or he cannot sell more stocks than he possesses. Throw an
-		// exception in these cases.
+		Order order = null;
+		if (orderType == OrderType.BUY) {
+			order = createBuyOrder(symbol, volume, price);
+			checkExistence(symbol, orderType, order);
+		} else if (orderType == OrderType.SELL) {
+			order = new SellOrder(symbol, volume, price, this);
+			checkExistence(symbol, orderType, order);
+			checkForSellOrders(symbol, orderType, order);
+		} else
+			throw new StockMarketExpection("Unknown order type for stock: "
+					+ symbol);
+		ordersPlaced.add(order);
+		m.addOrder(order);
+	}
 
+	private Order createBuyOrder(String symbol, int volume, double price)
+			throws StockMarketExpection {
+		Order order;
+		if (volume * price > cashInHand) {
+			throw new StockMarketExpection("Cannot place order for stock: "
+					+ symbol + " since there is not enough money. Trader: "
+					+ name);
+		}
+		order = new BuyOrder(symbol, volume, price, this);
+		return order;
+	}
+
+	private void checkExistence(String symbol, OrderType orderType, Order order)
+			throws StockMarketExpection {
+		if (OrderUtility.isAlreadyPresent(ordersPlaced, order)) {
+			throw new StockMarketExpection(orderType + " Order for stock: " + symbol
+					+ " already in place. Trader: " + name);
+		}
 	}
 
 	public void placeNewMarketOrder(Market m, String symbol, int volume,
 			double price, OrderType orderType) throws StockMarketExpection {
-		// Similar to the other method, except the order is a market order
+		double marketPrice = m.getStockForSymbol(symbol).getPrice();
+		Order order = null;
+		if (orderType == OrderType.BUY) {
+			order = createMarketBuyOrder(symbol, volume, marketPrice);
+			checkExistence(symbol, orderType, order);
+		} else if (orderType == OrderType.SELL) {
+			order = new SellOrder(symbol, volume, true, this);
+			checkExistence(symbol, orderType, order);
+			
+			checkForSellOrders(symbol, orderType, order);
+		} else
+			throw new StockMarketExpection(
+					"Unknown market order type for stock: " + symbol);
+		ordersPlaced.add(order);
+		m.addOrder(order);
+	}
+
+	private void checkForSellOrders(String symbol, OrderType orderType,
+			Order order) throws StockMarketExpection {
+		if (!OrderUtility.owns(position, symbol)) {
+			throw new StockMarketExpection(
+					orderType + " Order for stock: "
+							+ symbol
+							+ " that the owner does not have. No short sale is allowed. Trader: "
+							+ name);
+		}
+		if (OrderUtility.ownedQuantity(position, symbol) < order.getSize()) {
+			throw new StockMarketExpection(orderType + " Order for stock: "
+					+ symbol + " that the owner does not have. Owns: "
+					+ OrderUtility.ownedQuantity(position, symbol)
+					+ " stocks, but attempted to sell: " + order.getSize()
+					+ " stocks. Trader: " + name);
+		}
+	}
+
+	private Order createMarketBuyOrder(String symbol, int volume,
+			double marketPrice) throws StockMarketExpection {
+		Order order;
+		if (marketPrice * volume > cashInHand) {
+			throw new StockMarketExpection(
+					"Cannot place  order for stock: " + symbol
+							+ " since there is not enough money. Trader: "
+							+ name);
+		}
+		order = new BuyOrder(symbol, volume, true, this);
+		return order;
 	}
 
 	public void tradePerformed(Order o, double matchPrice)
 			throws StockMarketExpection {
-		// Notification received that a trade has been made, the parameters are
-		// the order corresponding to the trade, and the match price calculated
-		// in the order book. Note than an order can sell some of the stocks he
-		// bought, etc. Or add more stocks of a kind to his position. Handle
-		// these situations.
+		if (!ordersPlaced.contains(o))
+			throw new StockMarketExpection(
+					"Unknown trade performed notification by for stock: "
+							+ o.getStockSymbol());
+		else {
+			ordersPlaced.remove(o);
+			o.setPrice(matchPrice);
+			if (o instanceof BuyOrder) {
+				cashInHand -= matchPrice * o.getSize();
+				Order alreadyOwn = OrderUtility.findAndExtractOrder(position,
+						o.getStockSymbol());
+				if (alreadyOwn != null) {
+					alreadyOwn.setSize(alreadyOwn.getSize() + o.getSize());
+					position.add(alreadyOwn);
+				} else {
+					position.add(o);
+				}
+			} else if (o instanceof SellOrder) {
+				cashInHand += matchPrice * o.getSize();
+				Order alreadyOwn = OrderUtility.findAndExtractOrder(position,
+						o.getStockSymbol());
+				if (alreadyOwn != null) {
+					alreadyOwn.setSize(alreadyOwn.getSize() - o.getSize());
+					if (alreadyOwn.getSize() == 0) {
+						position.remove(alreadyOwn);
+					} else {
+						position.add(alreadyOwn);
+					}
 
-		// Update the trader's orderPlaced, position, and cashInHand members
-		// based on the notification.
+				} else {
+					throw new StockMarketExpection(
+							"Unknown sell trade for stock: "
+									+ o.getStockSymbol());
+				}
+
+			}
+		}
+	}
+	
+	public double getCashInHand(){
+		return this.cashInHand;
 	}
 
 	public void printTrader() {

@@ -4,11 +4,11 @@ import pkg.trader.Trader;
 
 public abstract class Order {
 	int size;
-	double price;
+	double d;
 	boolean isMarketOrder = false;
 	Trader trader;
 	int orderNumber;
-	String stockSymbol;
+	String stock;
 
 	/** LOCK */
 	public static final Object LOCK = new Object();
@@ -33,11 +33,11 @@ public abstract class Order {
 	}
 
 	public double getPrice() {
-		return price;
+		return d;
 	}
 
 	public void setPrice(double price) {
-		this.price = price;
+		this.d = price;
 	}
 
 	public boolean isMarketOrder() {
@@ -65,11 +65,11 @@ public abstract class Order {
 	}
 
 	public String getStockSymbol() {
-		return stockSymbol;
+		return stock;
 	}
 
 	public void setStockSymbol(String stockSymbol) {
-		this.stockSymbol = stockSymbol;
+		this.stock = stockSymbol;
 	}
 
 	/** */
@@ -78,7 +78,7 @@ public abstract class Order {
 	}
 
 	public void printStockNameInOrder() {
-		System.out.println(stockSymbol);
+		System.out.println(stock);
 	}
 
 	public abstract void printOrder();

@@ -9,31 +9,32 @@ import pkg.order.OrderBook;
 import pkg.stock.Stock;
 
 public class Market {
-	String marketName;
+	String name;
 	HashMap<String, Stock> stockList;
 	MarketHistory marketHistory;
 	OrderBook orderBook;
 
 	public Market(String name) {
-		this.marketName = name;
+		this.name = name;
 		stockList = new HashMap<String, Stock>();
 		marketHistory = new MarketHistory(this);
 		orderBook = new OrderBook(this);
 	}
 
 	public void addStock(Stock stock) throws StockMarketExpection {
+		String symbol = stock.getSymbol();
 		if (stock.getPrice() < 0.0) {
 			throw new StockMarketExpection("Stock has a negative price ("
-					+ stock.getSymbol() + ", " + stock.getPrice() + ")");
+					+ symbol + ", " + stock.getPrice() + ")");
 		}
-		if (stockList.containsKey(stock.getSymbol())) {
+		if (stockList.containsKey(symbol)) {
 			throw new StockMarketExpection(
 					"Tried to enter a stock that is already present ("
-							+ stock.getSymbol() + ")");
+							+ symbol + ")");
 		}
-		stockList.put(stock.getSymbol(), stock);
+		stockList.put(symbol, stock);
 		marketHistory
-				.startHistoryWithPrice(stock.getSymbol(), stock.getPrice());
+				.startHistoryWithPrice(symbol, stock.getPrice());
 	}
 
 	public Stock getStockForSymbol(String symbol) {
@@ -70,7 +71,7 @@ public class Market {
 	}
 
 	public void printStocks() {
-		System.out.println(marketName);
+		System.out.println(name);
 		for (String stockSymbol : stockList.keySet()) {
 			System.out.print("(" + stockSymbol + ", "
 					+ stockList.get(stockSymbol).getPrice() + ") ");
@@ -83,7 +84,7 @@ public class Market {
 			ArrayList<Double> priceList = getMarketHistory()
 					.getPriceFor(symbol);
 			System.out.println("Stock Name: " + symbol + " in Market: "
-					+ marketName);
+					+ name);
 			for (int i = priceList.size() - 1; i >= 0; i--) {
 				System.out.print(priceList.get(i));
 				if (i != 0)

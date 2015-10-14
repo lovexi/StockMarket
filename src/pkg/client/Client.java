@@ -1,5 +1,6 @@
 package pkg.client;
 
+
 import pkg.exception.StockMarketExpection;
 import pkg.market.Market;
 import pkg.market.api.IPO;
@@ -37,11 +38,11 @@ public class Client {
 		Trader trader12 = new Trader("Angela", 100000.00);
 		Trader trader13 = new Trader("Hamza", 100000.00);
 		Trader trader14 = new Trader("Ethan", 100000.00);
-
-		// Two traders with market orders
+//
+//		// Two traders with market orders
 		Trader trader15 = new Trader("T1", 300000.00);
 		Trader trader16 = new Trader("T2", 300000.00);
-
+//
 		try {
 			trader1.buyFromBank(m, "SBUX", 1600);
 			trader2.buyFromBank(m, "SBUX", 300);
@@ -93,7 +94,7 @@ public class Client {
 		trader6.printTrader();
 		trader7.printTrader();
 		trader15.printTrader();
-
+//
 		// Place buy orders
 		try {
 			trader8.placeNewOrder(m, "SBUX", 200, 101.0, OrderType.BUY);
@@ -108,7 +109,7 @@ public class Client {
 			// TODO Auto-generated catch block
 			e.printStackTrace();
 		}
-
+//
 		System.out.println("Printing after the buy orders are placed");
 		System.out.println("&^&^&^&^&^&^&^&^&^&^&^&^&^&^&^&^&^&^&^&^");
 		trader8.printTrader();
@@ -119,9 +120,9 @@ public class Client {
 		trader13.printTrader();
 		trader14.printTrader();
 		trader16.printTrader();
-
+//
 		m.triggerTrade();
-
+//
 		System.out.println("Printing after the tradings are done");
 		System.out.println("&^&^&^&^&^&^&^&^&^&^&^&^&^&^&^&^&^&^&^&^");
 		trader1.printTrader();
